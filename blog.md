@@ -17,6 +17,10 @@ Throughout this blog post, I will be drawing primarily from my personal experien
 
 The [USHMM oral testimony]((https://collections.ushmm.org/search/?f%5Bavailability%5D%5B%5D=transcript&f%5Bavailability%5D%5B%5D=english&f%5Bbrowse%5D%5B%5D=testimonies&page=1&per_page=100)) collection comprises over 2,000 transcribed testimonies of Holocaust survivors. Of these 2,000 testimonies, approximately 1,300 are in English. In this blog post, we will be working with a subset of approximately 1,100 that follow a similar schema, or way in which they are structured.
 
+![sample page](./images/sample_page.JPG)
+
+<i><center>Example of Testimony Page</center></i>
+
 The testimonies themselves present certain challenges to those seeking to apply NLP methods to them. First, the individuals who gave oral testimony in English were not native speakers. In some cases, this results in the speaker having to express certain concepts in their first language. This means that machine learning models need to be multilingual in order to capture all terms and concepts expressed in a testimony.
 
 This also leads to certain issues in the transcription. The transcriber of the original audio files was not necessarily present at the time of the oral interview and, in some instances, spells words phonetically. These are frequently concepts, places, or things in eastern Europe, potentially outside the knowledge of the transcriber. In other cases, the speaker will have an accent which prevents the transcriber from accurately transcribing the audio. This has resulted in noted gaps in certain testimonies which are often represented with `______`.
@@ -124,13 +128,21 @@ In addition to this, it is important to remember that the raw text output retain
 
 The headers of a page need to be removed. This is what we would call unnecessary data. It is useful for humans when analyzing a PDF physical page, but will make certain NLP tasks much more challenging.
 
+![sample of a header](./images/header.JPG)
+
+<i><center>Sample of a Header</center></i>
+
 Finally, across all 1,100 testimonies there are certain inconsistencies. For example, most of the time a question receives a unique indication that a piece of dialogue is a question, e.g. "Q: ", but other times it can appear as "Question: ". In order to create rules for parsing raw text, it is good practice to ensure that your texts are standardized.
 
 Most of these issues can be resolved with Regular Expressions (RegEx) via the sub function which is a more robust method for replacing a substring with another substring via Python when compared to the built-in string method of `.replace()`.
 
 The below section of Python code will iterate over every OCR output from Tesseract. It will then go through a series of RegEx sub processes on the entire testimony. These standardize line breaks, the lead Qs and As for Question and Answer segments of dialogue, and remove the headers of the page.
 
-Finally, it will iterate over each section of text. A section is considered any place where there is a double line break. Next, it will iterate over each line in a segment and structure the sequence in a dictionary called `collection`. This will retain the RG number of the testimony (used for USHMM cataloging), the sequence of the testimony (the sequential order of the dialogue), as well as the questions and answers of the testimony (when possible); finally, it also preserves the original header data which usually occurs on the second page. This may be useful for some for downstream tasks as it contains information about the interviewee and the date of the interview.
+Finally, it will iterate over each section of text. A section is considered any place where there is a double line break. Next, it will iterate over each line in a segment and structure the sequence in a dictionary called `collection`. This will retain the RG number of the testimony (used for USHMM cataloging), the sequence of the testimony (the sequential order of the dialogue), as well as the questions and answers of the testimony (when possible); finally, it also preserves the original preface data which usually occurs on the second page. This may be useful for some for downstream tasks as it contains information about the interviewee and the date of the interview.
+
+![sample of a header](./images/preface.JPG)
+
+<i><center>Sample of a Preface</center></i>
 
 Finally, this Python code will save the JSON output in a subfolder of your choosing. In our case, this is `clean_ocr`.
 
