@@ -196,3 +196,7 @@ for file in files:
     with open(f"clean_ocr/{file}.json", "w", encoding="utf-8") as f:
         json.dump(collection, f, indent=4)
 ```
+
+# Conclusion
+
+Working with text data changes depending on the type of documents we are working with. Hopefully this short blog post has given you a few ways to consider working with oral testimonies as data, as well as some basic Python for performing OCR on PDFs and processing of the raw text into structured data.
