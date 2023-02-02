@@ -94,6 +94,17 @@ for filename in files:
         f.write(text)
 ```
 
+# The Architecture of a Testimony
+
+Once we have our raw OCR output, we can begin thinking about how to parse the raw data. To do so requires serious methodological considerations about the architecture of a testimony.
+
+When writing the below Python code, I thought about how to structure an oral testimony as data. In my earlier work, I worked primarily with USHMM testimonies where the paradigm was quite simple: the interviewer asked a question and the interviewee responded. As I began to work on testimonies outside the USHMM, such as the VHA testimonies of the Shoah Foundation and the oral testimonies from South Africa's TRC, I began to alter the way I thought about this paradigm.
+
+Not all testimonies follow the question-answer format.  Sometimes there are multiple interviewees; at other times, the testimony records ambient noise or individuals; this is especially true with the VHA testimonies that reference when a background camera person says something. Each of these things suggest that a question-answer architecture is too rigid for structuring an oral testimony. Nevertheless, it is important to segment out the voices of the speakers.
+
+When working with TEI-XML testimonies, such as those from the Shoah Foundation, this problem is solved because each speaker has a distinct markup tag. When working with real-world data, we are rarely so fortunate. Creating polished TEI-XML files is time consuming and much of the tagging is unnecessary for certain NLP tasks. For example, if one wanted to classify sections of a testimony that dealt with hunger and other sections that  dealt with family, it would not make sense to invest hours into producing TEI-XML markup for one testimony when your research requires you to examine thousands en masse.
+
+When working with real-world uncleaned text, parsing out the voice of the speakers can be challenging. Typically in an oral testimony, however, the transcript provides some clues as to when a particular voice changes. This will be different for each collection of testimonies. At the USHMM, we have the `Q: ` and  `A: ` that indicate when the interviewer poses a question and when the interviewee responds. In the South African TRC testimonies (which are wildly inconsistent), we have different indicators, such as an individual's honorific followed by surname, e.g. `MR NKOSI`. It is important for you to examine your own collection and find the patterns that allow you, as a human, to prase the testimony on the page. Then, write rules that reflect that pattern for automating the parsing of the testimony. This will be a trial-and-error process.
 
 # Converting Raw Text to Structured Data
 
@@ -175,6 +186,3 @@ for file in files:
     with open(f"clean_ocr/{file}.json", "w", encoding="utf-8") as f:
         json.dump(collection, f, indent=4)
 ```
-
-# The Architecture of a Testimony
-
