@@ -7,7 +7,7 @@ In this blog post, we will explore some of the challenges of working with oral t
 - Converting the raw text to structured data
 - Methodological considerations for structuring the data programmatically
 
-Throughout this blog, I will provide snippets of Python code that I will briefly explain. The goal here is to provide the reader with some of the code necessary for following along with the methodology of this blog. For a more in-depth look at the code, please see the `notebooks` subdirectory of this repository. There, you will find notebooks dedicated to narrow tasks described in this blog.
+Throughout this blog, I will provide snippets of Python code that I will briefly explain. The goal here is to provide the reader with some of the code necessary for following along with the methodology of this blog. For a more in-depth look at the code, please see the `notebooks` subdirectory of this [repository](https://github.com/wjbmattingly/ushmm-holocaust-testimonies). There, you will find notebooks dedicated to narrow tasks described in this blog.
 
 # Background
 
