@@ -5,7 +5,9 @@ In this blog post, we will explore some of the challenges of working with oral t
 - Downloading the PDFs in bulk
 - OCRing them with Tesseract
 - Converting the raw text to structured data
-- Methodological considerations for structuring the data
+- Methodological considerations for structuring the data programmatically
+
+Throughout this blog, I will provide snippets of Python code that I will briefly explain. The goal here is to provide the reader with some of the code necessary for following along with the methodology of this blog. For a more in-depth look at the code, please see the `notebooks` subdirectory of this repository. There, you will find notebooks dedicated to narrow tasks described in this blog.
 
 # Background
 
@@ -21,11 +23,11 @@ The [USHMM oral testimony]((https://collections.ushmm.org/search/?f%5Bavailabili
 
 <i><center>Example of Testimony Page</center></i>
 
-The testimonies themselves present certain challenges to those seeking to apply NLP methods to them. First, the individuals who gave oral testimony in English were not native speakers. In some cases, this results in the speaker having to express certain concepts in their first language. This means that machine learning models need to be multilingual in order to capture all terms and concepts expressed in a testimony.
+The testimonies themselves present certain challenges to those seeking to apply NLP methods to them. First, the individuals who gave oral testimony in English were not native speakers. In some cases, this results in the speaker having to express certain concepts in their first language. This means the models for parsing these types of documents should be multilingual in nature. This will help downstream tasks, such as named entity recognition or text classification.
 
 This also leads to certain issues in the transcription. The transcriber of the original audio files was not necessarily present at the time of the oral interview and, in some instances, spells words phonetically. These are frequently concepts, places, or things in eastern Europe, potentially outside the knowledge of the transcriber. In other cases, the speaker will have an accent which prevents the transcriber from accurately transcribing the audio. This has resulted in noted gaps in certain testimonies which are often represented with `______`.
 
-The testimonies are available as PDFs from the museum, but these PDFs present other challenges. First, they are encrypted which means the current OCR is difficult to extract programmatically. Second, the OCR has mistakes consistent with OCR of the early 2000s. Third, the raw text of the OCR is not structured which results in headers and footers frequently appearing alongside the main text. It also means that the data within a testimony is not tagged, so we cannot identify individual speakers or separate questions from answers. In other words, the PDFs in their original state contain unstructured text with frequent OCR errors.
+The testimonies are available as PDFs from the museum, but these PDFs present challenges of their own. First, they are encrypted which means the current OCR is difficult to extract programmatically. Second, the OCR has mistakes consistent with OCR of the early 2000s. Third, the raw text of the OCR is not structured which results in headers and footers frequently appearing alongside the main text. It also means that the data within a testimony is not tagged, so we cannot identify individual speakers or separate questions from answers. In other words, the PDFs in their original state contain unstructured text with frequent OCR errors.
 
 Each of these challenges make working with the oral testimonies en masse difficult. The issues I have noted above are not unique to the USHMM oral testimonies. These are identical problems that surface when working with oral testimonies from other collections, such as the TRC in South Africa. There are other collections of Holocaust oral testimonies, such as those available from the USC Shoah Foundation. While these testimonies are structured with cleaned XML markup, the data is not open-source and requires permission to obtain.
 
