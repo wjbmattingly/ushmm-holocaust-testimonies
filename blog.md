@@ -1,30 +1,35 @@
 # Working with Oral Testimonies as Data
 
-In this blog post, we will explore some of the challenges of working with oral testimonies as data. We will also cover some solutions and methodological steps you can make in working with this type of data. For our case study, we will use a collection of over 1,000 English oral testimonies from the United States Holocaust Memorial Museum.
+In this blog post, we will explore some of the challenges of working with oral testimonies as data. We will also cover some solutions and methodological steps you can make in working with these types of documents programmatically, or through  automation. For our case study, we will use a collection of over 1,000 English oral testimonies from the United States Holocaust Memorial Museum. In this blog, we will cover:
+
+- Downloading the PDFs in bulk
+- OCRing them with Tesseract
+- Converting the raw text to structured data
+- Methodological considerations for structuring the data
 
 # Background
 
-For those who do not know, I work in the field of multilingual natural language processing, specifically applying NLP solutions to historical documents and museum archives. I am attached to the Smithsonian Institution's Data Science Lab as the digital humanities postdoctoral fellow. My appoint is split, however, between the American Women's History Initiative at the Smithsonian and the USHMM. At the latter, I have worked with the oral testimonies for nearly two years. In addition this, I have also worked with oral testimonies from South Africa's Truth and Reconciliation Commission (TRC) for the Bitter Aloe Project.
+Before we jump in, however, let's cover a bit of background information about me and my work. For those who do not know, I work in the field of multilingual natural language processing, specifically applying NLP solutions to historical documents and museum archives. I am attached to the [Smithsonian Institution's Data Science Lab](https://datascience.si.edu/) as the digital humanities postdoctoral fellow. My appoint is split, however, between the [American Women's History Initiative](https://affiliations.si.edu/american-womens-history-initiative/) at the Smithsonian and the [United States Holocaust Memorial Museum (USHMM)](https://www.ushmm.org/). At the latter, I have worked with the oral testimonies for nearly two years. In addition this, I have also worked with oral testimonies from South Africa's Truth and Reconciliation Commission (TRC) for the [Bitter Aloe Project](https://bitteraloeproject.createuky.net/).
 
 Throughout this blog post, I will be drawing primarily from my personal experience in working with oral testimonies from both projects. I will be detailing some of the methodological challenges that transcend a single collection of oral testimonies. It is my hope that by approaching the problem in this way, the information I provide will be specifically related to USHMM oral testimonies, but broadly applicable to oral testimonies in other collections.
 
 # Challenges of USHMM Oral Testimonies
 
-The USHMM oral testimony collection comprises nearly 2,000 transcribed testimonies of Holocaust survivors. Of these 2,000 testimonies, approximately 1,300 are in English. In this blog post, we will be working with a subset of approximately 1,100 that follow a similar schema, or way in which they are structured.
+The [USHMM oral testimony]((https://collections.ushmm.org/search/?f%5Bavailability%5D%5B%5D=transcript&f%5Bavailability%5D%5B%5D=english&f%5Bbrowse%5D%5B%5D=testimonies&page=1&per_page=100)) collection comprises over 2,000 transcribed testimonies of Holocaust survivors. Of these 2,000 testimonies, approximately 1,300 are in English. In this blog post, we will be working with a subset of approximately 1,100 that follow a similar schema, or way in which they are structured.
 
-The testimonies themselves present certain challenges within the field of NLP. First, the individuals who gave oral testimony in English were not native speakers. In some cases, this results in the speaker having to express certain concepts in their first language.
+The testimonies themselves present certain challenges to those seeking to apply NLP methods to them. First, the individuals who gave oral testimony in English were not native speakers. In some cases, this results in the speaker having to express certain concepts in their first language. This means that machine learning models need to be multilingual in order to capture all terms and concepts expressed in a testimony.
 
-This also leads to certain issues in the transcription. The transcriber of the original audio files was not necessarily present at the time of the oral interview and, in some instances, spells words phonetically. These are frequently concepts, places, or things in eastern Europe. In other cases, the speaker will have a thick accent which prevents the transcriber from accurately transcribing the audio. This has resulted in noted gaps in certain testimonies.
+This also leads to certain issues in the transcription. The transcriber of the original audio files was not necessarily present at the time of the oral interview and, in some instances, spells words phonetically. These are frequently concepts, places, or things in eastern Europe, potentially outside the knowledge of the transcriber. In other cases, the speaker will have an accent which prevents the transcriber from accurately transcribing the audio. This has resulted in noted gaps in certain testimonies which are often represented with `______`.
 
-The testimonies are available as PDFs from the museum, but these PDFs present certain challenges. First, they are encrypted which means the current OCR is difficult to extract programmatically. Second, the OCR has mistakes consistent with OCR of the early 2000s. Third, the raw text of the OCR is not structured which results in headers and footers frequently appearing alongside the main text. It also means that the data within a testimony is not tagged, so we cannot identify individual speakers or separate questions from answers. In other words, the PDFs in their original state is simply raw, unstructured text with frequent OCR errors.
+The testimonies are available as PDFs from the museum, but these PDFs present other challenges. First, they are encrypted which means the current OCR is difficult to extract programmatically. Second, the OCR has mistakes consistent with OCR of the early 2000s. Third, the raw text of the OCR is not structured which results in headers and footers frequently appearing alongside the main text. It also means that the data within a testimony is not tagged, so we cannot identify individual speakers or separate questions from answers. In other words, the PDFs in their original state contain unstructured text with frequent OCR errors.
 
-Each of these challenges make working with the oral testimonies en masse difficult. The issues I have noted above are not unique to the USHMM oral testimonies. These are identical issues that surface when working with oral testimonies from other collections, such as the TRC in South Africa. There are other collections of Holocaust oral testimonies, such as those available from the USC Shoah Foundation. While these testimonies are structured with cleaned XML markup, the data is not open-source and requires permission to obtain.
+Each of these challenges make working with the oral testimonies en masse difficult. The issues I have noted above are not unique to the USHMM oral testimonies. These are identical problems that surface when working with oral testimonies from other collections, such as the TRC in South Africa. There are other collections of Holocaust oral testimonies, such as those available from the USC Shoah Foundation. While these testimonies are structured with cleaned XML markup, the data is not open-source and requires permission to obtain.
 
 # Download the Original PDFs from USHMM
 
-Due to all the above issues, working with the USHMM testimonies as data requires us to go back to the original PDFs and re-OCR them. In order to do that, however, we first must download the files. We can do this in Python with `requests` which allows users to call up a server and download request.
+Due to all the above issues, working with the USHMM testimonies as data requires us to go back to the original PDFs and re-OCR them. In order to do that, however, we first must download the files. We can do this in Python with `requests`, a library for making requests to servers programmatically.
 
-Attached to this blog is a collection of notebooks that can be used to recreate the workflow laid out in this blog, including the downloading of the original PDFs. The urls for each English oral testimony can be found in the `data` subfolder of this repository.
+Attached to this blog is a collection of notebooks that can be used to follow this workflow, including the downloading of the original PDFs. To save time, however, you can also access the page data for oral testimonies as a csv file in the `data` subfolder of this repository.
 
 The CSV looks like the table below, where the page is the url for a given testimony. On that page sits a PDF transcript which can be downloaded.
 
@@ -64,8 +69,9 @@ def download_pdf(url, DIR):
 
 # OCR with Tesseract
 
-Once all the oral testimonies have been downloaded, we can then re-OCR them via Python and Tesseract (an OCR engine from Google) via `pytesseract`. To convert the PDFs to a series of images, we can use the `convert_from_path` class in the `pdf2image` library.
+Once all the oral testimonies have been downloaded, we can then re-OCR them with Python and Tesseract (an OCR engine from Google) via `pytesseract`, a Python wrapper for the Tesseract OCR engine. It is important to remember, however, that a PDF is merely a collection of page images. We first need to convert a PDF to individual images that we can then process via Tesseract. To convert the PDFs to a series of images, we can use the `convert_from_path` class in the `pdf2image` library.
 
+In Python, we would first want to import these libraries and classes.
 
 ```python
 import glob
@@ -80,7 +86,7 @@ files = glob.glob("pdfs/*trs_en.pdf")
 len(files)
 ```
 
-Once we have all the files, we can then iterate over each one and convert it 
+Once we have all the files, we can then iterate over each PDF, convert them to a collection of images, and then OCR each image. Finally, we can add the OCR of each image to a `text` string object. This will allow us to convert an entire PDF into a single string of raw text.
 
 ```python
 for filename in files:
@@ -98,19 +104,23 @@ for filename in files:
 
 Once we have our raw OCR output, we can begin thinking about how to parse the raw data. To do so requires serious methodological considerations about the architecture of a testimony.
 
-When writing the below Python code, I thought about how to structure an oral testimony as data. In my earlier work, I worked primarily with USHMM testimonies where the paradigm was quite simple: the interviewer asked a question and the interviewee responded. As I began to work on testimonies outside the USHMM, such as the VHA testimonies of the Shoah Foundation and the oral testimonies from South Africa's TRC, I began to alter the way I thought about this paradigm.
+When writing the Python code for parsing these testimonies (found in the next section), I thought about how to structure an oral testimony as data. In my earlier work, I worked primarily with USHMM testimonies where the paradigm was quite simple: the interviewer asked a question and the interviewee responded. As I began to work on testimonies outside the USHMM, such as the VHA testimonies of the Shoah Foundation and the oral testimonies from South Africa's TRC, I began to alter the way I thought about this paradigm.
 
-Not all testimonies follow the question-answer format.  Sometimes there are multiple interviewees; at other times, the testimony records ambient noise or individuals; this is especially true with the VHA testimonies that reference when a background camera person says something. Each of these things suggest that a question-answer architecture is too rigid for structuring an oral testimony. Nevertheless, it is important to segment out the voices of the speakers.
+The reason? Not all testimonies follow the question-answer format. 
 
-When working with TEI-XML testimonies, such as those from the Shoah Foundation, this problem is solved because each speaker has a distinct markup tag. When working with real-world data, we are rarely so fortunate. Creating polished TEI-XML files is time consuming and much of the tagging is unnecessary for certain NLP tasks. For example, if one wanted to classify sections of a testimony that dealt with hunger and other sections that  dealt with family, it would not make sense to invest hours into producing TEI-XML markup for one testimony when your research requires you to examine thousands en masse.
+Sometimes there are multiple interviewees or interviewers in a single testimony; at other times, the testimony records ambient noise or tertiary individuals, this is especially true with the VHA testimonies that reference when a background camera person says something. Each of these things suggest that a question-answer architecture is too rigid for structuring an oral testimony. Nevertheless, it is important to segment out the voices of the speakers.
 
-When working with real-world uncleaned text, parsing out the voice of the speakers can be challenging. Typically in an oral testimony, however, the transcript provides some clues as to when a particular voice changes. This will be different for each collection of testimonies. At the USHMM, we have the `Q: ` and  `A: ` that indicate when the interviewer poses a question and when the interviewee responds. In the South African TRC testimonies (which are wildly inconsistent), we have different indicators, such as an individual's honorific followed by surname, e.g. `MR NKOSI`. It is important for you to examine your own collection and find the patterns that allow you, as a human, to prase the testimony on the page. Then, write rules that reflect that pattern for automating the parsing of the testimony. This will be a trial-and-error process.
+When working with TEI-XML testimonies, such as those from the Shoah Foundation, this problem is solved because each speaker has a distinct markup tag. When working with real-world data, we are rarely so fortunate. Creating polished TEI-XML files is time consuming and much of the tagging is unnecessary for certain NLP tasks. For example, if one wanted to classify sections of a testimony that dealt with hunger and other sections that dealt with family, it would not make sense to invest hours into producing TEI-XML markup for one testimony when your research requires you to examine thousands of them en masse.
+
+When working with real-world uncleaned text, parsing out the voice of the speakers can be challenging. Typically in an oral testimony, however, the transcript provides some clues as to when a particular voice changes. This will be different for each collection of testimonies. At the USHMM, we have the `Q: ` and  `A: ` markings before each section of dialogue. These indicate when the interviewer poses a question and when the interviewee answers. In the South African TRC testimonies (which are wildly inconsistent), we have different indicators, such as an individual's honorific followed by surname, e.g. `MR NKOSI`. It is important for you to examine your own collection and find the patterns that allow you, as a human, to parse the testimony on the page visually. Once you find the visual clues in the text that indicate a distinct person is speaking, you can begin to write rules that reflect that pattern for automating the parsing of the testimony. This will be a trial-and-error process.
 
 # Converting Raw Text to Structured Data
 
-Although the above methods use the more advanced Tesseract OCR engine, the results will not be perfect. Common mistakes include '1n' for 'in', for example. These are common mistakes when OCRing and can be cleaned with a set of rules.
+When we have our raw OCR text, we can begin working with it via Python, however it is worth noting that the results of Tesseract will not be perfect. Common mistakes include '1n' for 'in', for example. These are common mistakes when OCRing and can be cleaned with a set of rules.
 
-Some of the more challenging aspects of the raw text output lies in dealing with the headers and footers of the PDF page. In addition to this, it is important to remember that the raw text output retains the line breaks of the original PDF. This means that sentences will be broken up into individual lines. Typically line breaks are singular between individual lines on the page and double between the segments of dialogue. But this is not always the case. Several factors can increase the number of line breaks, such as a page break. For this reason, it is important to standardize the line breaks on the page early in the parsing process.
+Some of the more challenging aspects of the raw text output lies in dealing with the headers and footers of the PDF page.
+
+In addition to this, it is important to remember that the raw text output retains the line breaks of the original PDF. This means that sentences will be broken up into individual lines. Typically line breaks are singular between individual lines on the page and double between the segments of dialogue. But this is not always the case. Several factors can increase the number of line breaks, such as a page break. For this reason, it is important to standardize the line breaks on the page early in the parsing process.
 
 The headers of a page need to be removed. This is what we would call unnecessary data. It is useful for humans when analyzing a PDF physical page, but will make certain NLP tasks much more challenging.
 
