@@ -22,7 +22,7 @@ Each of these challenges make working with the oral testimonies en masse difficu
 
 # Download the Original PDFs from USHMM
 
-In order to begin working with the USHMM oral testimonies, it was vital to go back to the original PDFs and re-OCR them. In order to do that, however, we first must download the files. We can do this in Python with `requests` which allows users to call up a server and download request.
+Due to all the above issues, working with the USHMM testimonies as data requires us to go back to the original PDFs and re-OCR them. In order to do that, however, we first must download the files. We can do this in Python with `requests` which allows users to call up a server and download request.
 
 Attached to this blog is a collection of notebooks that can be used to recreate the workflow laid out in this blog, including the downloading of the original PDFs. The urls for each English oral testimony can be found in the `data` subfolder of this repository.
 
@@ -40,6 +40,13 @@ To download a PDF on a particular page, you can make a request to the server and
 
 ```python
 def download_pdf(url, DIR):
+    '''
+    This function will download the PDF of a specific testimony from a page on the USHMM website.
+    ----
+    Args:
+        url (str) => the url of the USHMM page on which a PDF link sits
+        DIR (str) = > the directory in which you wish for the PDFs to be saved
+    '''
     s =  requests.get(url)
     soup = BeautifulSoup(s.content)
     pdf = ""
@@ -54,7 +61,6 @@ def download_pdf(url, DIR):
     else:
         print(f"No available pdf for {url}")
 ```
-
 
 # OCR with Tesseract
 
@@ -89,10 +95,86 @@ for filename in files:
 ```
 
 
+# Converting Raw Text to Structured Data
 
+Although the above methods use the more advanced Tesseract OCR engine, the results will not be perfect. Common mistakes include '1n' for 'in', for example. These are common mistakes when OCRing and can be cleaned with a set of rules.
 
-# Post-Processing OCR
+Some of the more challenging aspects of the raw text output lies in dealing with the headers and footers of the PDF page. In addition to this, it is important to remember that the raw text output retains the line breaks of the original PDF. This means that sentences will be broken up into individual lines. Typically line breaks are singular between individual lines on the page and double between the segments of dialogue. But this is not always the case. Several factors can increase the number of line breaks, such as a page break. For this reason, it is important to standardize the line breaks on the page early in the parsing process.
 
+The headers of a page need to be removed. This is what we would call unnecessary data. It is useful for humans when analyzing a PDF physical page, but will make certain NLP tasks much more challenging.
 
-# Structuring Oral Testimonies
+Finally, across all 1,100 testimonies there are certain inconsistencies. For example, most of the time a question receives a unique indication that a piece of dialogue is a question, e.g. "Q: ", but other times it can appear as "Question: ". In order to create rules for parsing raw text, it is good practice to ensure that your texts are standardized.
+
+Most of these issues can be resolved with Regular Expressions (RegEx) via the sub function which is a more robust method for replacing a substring with another substring via Python when compared to the built-in string method of `.replace()`.
+
+The below section of Python code will iterate over every OCR output from Tesseract. It will then go through a series of RegEx sub processes on the entire testimony. These standardize line breaks, the lead Qs and As for Question and Answer segments of dialogue, and remove the headers of the page.
+
+Finally, it will iterate over each section of text. A section is considered any place where there is a double line break. Next, it will iterate over each line in a segment and structure the sequence in a dictionary called `collection`. This will retain the RG number of the testimony (used for USHMM cataloging), the sequence of the testimony (the sequential order of the dialogue), as well as the questions and answers of the testimony (when possible); finally, it also preserves the original header data which usually occurs on the second page. This may be useful for some for downstream tasks as it contains information about the interviewee and the date of the interview.
+
+Finally, this Python code will save the JSON output in a subfolder of your choosing. In our case, this is `clean_ocr`.
+
+```python
+import glob
+import re
+import json
+
+files = glob.glob("tesseract_ocr/*.txt")
+
+for file in files:
+    collection = {}
+    with open(file, "r", encoding="utf-8") as f:
+        item = f.read()
+    file = file.split("\\")[-1].replace(".txt", "")
+    if file.split(".")[1] == "562":
+        print("found")
+        break
+    questions = []
+    answers = []
+    headers = []
+    misses = []
+    item = re.sub("\nA:", "\n\nA:", item)
+    item = re.sub("\nAnswer:", "\n\nAnswer:", item)
+    item = re.sub("\nQ:", "\n\nQ:", item)
+    item = re.sub("\nQuestion:", "\n\nQuestion:", item)
+    item = re.sub("\n\n\n", "\n\n", item)
+    item = re.sub("http://collections.ushmm.org", "", item)
+    item = re.sub("\nContact reference@ushmm.org for further information about tis collection\n", "", item)
+    item = re.sub("Contact reference@ushmm.org for further information about this collection", "", item)
+    item = re.sub("This is a verbatim transcript of spoken word. It is not the primary source, and it has not been checked for spelling or accuracy.", "", item)
+    item = re.sub("\nInterview with.*\n", "", item)
+    item = re.sub("\nUSHMM Archives.*\n", "", item)
+    item = re.sub("\n\d{1,2}:\d{1,2}:\d{1,2}", "", item)
+    
+    while "\n\n\n" in item:
+        item = item.replace("\n\n\n", "\n\n")
+    sections = item.split("\n\n")
+    sequence = []
+    collection = {"rg": file, "sequence": [], "questions":[], "answers": [], "headers": [], "paragraph_breaks": []}
+    # print(len(lines))
+    for section in sections:
+        lines = []
+        for line in section.split("\n"):
+            if "USHMM" not in line:
+                lines.append(line)
+            else:
+                headers.append(line)
+        section = "\n".join(lines)       
+        if "Q:" in section or "question:" in section.lower():
+            collection["questions"].append(section)
+            sequence.append(section)
+        elif "A:" in section or "answer:" in section.lower():
+            collection["answers"].append(section)
+            sequence.append(section)
+        else:
+            if collection["answers"]:
+                sequence[-1] = f'{sequence[-1]}\n{section}'
+                collection["answers"][-1] = f'{collection["answers"][-1]}\n{section}'
+            else:
+                collection["paragraph_breaks"].append(section)
+    collection["sequence"] = sequence
+    with open(f"clean_ocr/{file}.json", "w", encoding="utf-8") as f:
+        json.dump(collection, f, indent=4)
+```
+
+# The Architecture of a Testimony
 
